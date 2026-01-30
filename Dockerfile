@@ -1,10 +1,13 @@
-FROM golang:1.19-alpine AS builder
+FROM golang:1.25.6-alpine AS builder
 
 WORKDIR /app
 
 # 安装必要的构建工具
 RUN apk add --no-cache git gcc musl-dev
-
+# 设置 Go 模块代理和 CGO 编译器
+ENV GOPROXY=https://goproxy.cn,direct
+# 可选项：在严格网络环境下关闭校验
+# ENV GOSUMDB=off
 # 复制依赖文件
 COPY go.mod go.sum ./
 RUN go mod download
