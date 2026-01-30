@@ -1,0 +1,48 @@
+# 本地构建Dockerfile - 使用本地镜像避免网络依赖
+
+# 方案一：如果有本地golang镜像
+# FROM golang:1.19-alpine AS builder
+
+# 方案二：使用alpine + Go二进制（推荐，无需网络）
+FROM alpine:latest AS builder
+
+WORKDIR /app
+
+# 复制预编译的二进制文件（需要先本地编译）
+# COPY mteam-downloader .
+
+# 或者使用apk安装go并编译（需要网络）
+# RUN apk add --no-cache git gcc musl-dev
+# COPY go.mod go.sum ./
+# RUN go mod download
+# COPY . .
+# RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o mteam-downloader .
+
+# 最终镜像
+FROM alpine:latest
+
+# 安装运行时依赖
+RUN apk --no-cache add ca-certificates tzdata sqlite
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+
+WORKDIR /app
+
+# 从构建阶段复制可执行文件
+COPY --from=builder /app/mteam-downloader .
+
+# 复制模板文件
+COPY internal/web/templates ./web/templates
+
+# 创建必要的目录
+RUN mkdir -p /app/config /app/torrents /app/data
+
+# 设置卷
+VOLUME ["/app/config", "/app/torrents", "/app/data"]
+
+# 暴露端口
+EXPOSE 8080
+
+# 设置入口点
+CMD ["./mteam-downloader", "-config", "/app/config/config.yaml"]

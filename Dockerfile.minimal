@@ -1,0 +1,27 @@
+# 最小化Dockerfile - 避免外部镜像依赖
+
+# 方案：使用scratch基础镜像（最小镜像）
+
+FROM scratch
+
+# 复制预编译的二进制文件和依赖
+COPY mteam-downloader /
+COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY internal/web/templates /app/templates
+COPY config.yaml /app/config.yaml
+
+# 创建目录
+RUN ["/bin/sh", "-c", "mkdir -p /app/torrents /app/data"]
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+
+# 暴露端口
+EXPOSE 8080
+
+# 工作目录
+WORKDIR /app
+
+# 设置入口点
+ENTRYPOINT ["/mteam-downloader"]
+CMD ["-config", "/app/config.yaml"]
