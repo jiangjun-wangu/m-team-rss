@@ -1,0 +1,37 @@
+# 二进制文件
+mteam-downloader
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 依赖
+vendor/
+
+# 测试
+*.test
+*.out
+coverage.txt
+
+# 数据文件
+data/
+torrents/
+config.yaml
+
+# 日志
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时文件
+tmp/
+temp/

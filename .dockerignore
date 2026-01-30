@@ -1,0 +1,32 @@
+# Git
+.git
+.gitignore
+
+# 数据文件
+data/
+torrents/
+config/
+
+# 日志文件
+*.log
+
+# 临时文件
+tmp/
+temp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 构建产物
+mteam-downloader
+*.exe
+
+# 测试
+*_test.go

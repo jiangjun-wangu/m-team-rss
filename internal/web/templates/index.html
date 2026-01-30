@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-bar .status-item {
+            display: inline-block;
+            margin-right: 30px;
+            color: #495057;
+        }
+
+        .status-bar .status-item strong {
+            color: #212529;
+            margin-right: 8px;
+        }
+
+        .status-running {
+            color: #28a745 !important;
+        }
+
+        .status-stopped {
+            color: #dc3545 !important;
+        }
+
+        .stats-bar {
+            background: #e7f3ff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #007bff;
+        }
+
+        .stat-item .label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+
+        .refresh-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .items-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #dee2e6;
+            transition: all 0.3s;
+        }
+
+        .item.downloaded {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .item.pending {
+            border-left-color: #ffc107;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: #212529;
+            font-size: 16px;
+            flex: 1;
+        }
+
+        .item-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.downloaded {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-badge.pending {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .item-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #6c757d;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .stats-bar {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .status-bar .status-item {
+                display: block;
+                margin: 10px 0;
+            }
+
+            .item-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>M-Team RSS下载器</h1>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <strong>状态:</strong>
+                <span id="systemStatus" class="status-running">加载中</span>
+            </div>
+            <div class="status-item">
+                <strong>RSS地址:</strong>
+                <span id="rssUrl">加载中</span>
+            </div>
+            <div class="status-item">
+                <strong>最后检查:</strong>
+                <span id="lastFetch">未运行</span>
+            </div>
+            <div class="status-item">
+                <strong>下次检查:</strong>
+                <span id="nextFetch">等待中</span>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="value" id="totalItems">0</div>
+                <div class="label">总共</div>
+            </div>
+            <div class="stat-item">
+                <div class="value" id="downloaded">0</div>
+                <div class="label">已下载</div>
+            </div>
+            <div class="stat-item">
+                <div class="value" id="pending">0</div>
+                <div class="label">待处理</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="errorMessage" class="error-message"></div>
+            <button class="refresh-btn" id="refreshBtn" onclick="refreshData()">
+                刷新数据
+            </button>
+            <div id="itemsList" class="items-list">
+                <div class="loading">加载中</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span id="lastUpdate">最后更新: 正在加载...</span>
+        </div>
+    </div>
+
+    <script>
+        let refreshInterval;
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                // 更新状态显示
+                const statusEl = document.getElementById('systemStatus');
+                statusEl.textContent = data.status === 'running' ? '运行中' : '已停止';
+                statusEl.className = data.status === 'running' ? 'status-running' : 'status-stopped';
+
+                document.getElementById('rssUrl').textContent = data.rss_url.substring(0, 50) + (data.rss_url.length > 50 ? '...' : '');
+                document.getElementById('lastFetch').textContent = formatDate(data.last_fetch) || '未运行';
+                document.getElementById('nextFetch').textContent = formatDate(data.next_fetch) || '等待中';
+                document.getElementById('totalItems').textContent = data.total_items;
+                document.getElementById('downloaded').textContent = data.downloaded;
+                document.getElementById('pending').textContent = data.pending;
+
+                // 显示错误信息
+                const errorEl = document.getElementById('errorMessage');
+                if (data.last_error) {
+                    errorEl.textContent = '最后错误: ' + data.last_error;
+                    errorEl.classList.add('show');
+                } else {
+                    errorEl.classList.remove('show');
+                }
+
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+            }
+        }
+
+        async function fetchRSSItems() {
+            try {
+                const response = await fetch('/api/rss-items');
+                const data = await response.json();
+                renderItems(data.items);
+            } catch (error) {
+                console.error('Failed to fetch RSS items:', error);
+                document.getElementById('itemsList').innerHTML = '<div class="empty-state">加载失败</div>';
+            }
+        }
+
+        function renderItems(items) {
+            const container = document.getElementById('itemsList');
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <p>暂无RSS项目</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="item ${item.is_downloaded ? 'downloaded' : 'pending'}">
+                    <div class="item-header">
+                        <div class="item-title">${escapeHtml(item.title)}</div>
+                        <div class="item-status">
+                            <span class="status-badge ${item.is_downloaded ? 'downloaded' : 'pending'}">
+                                ${item.is_downloaded ? '已下载' : '待下载'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="item-meta">
+                        <span>发布时间: ${formatDate(item.pub_date)}</span>
+                        ${item.downloaded_at ? `<span>下载时间: ${formatDate(item.downloaded_at)}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function refreshData() {
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = '刷新中...';
+
+            try {
+                // 触发立即获取
+                await fetch('/api/trigger', { method: 'POST' });
+
+                // 等待一段时间后重新获取数据
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                await Promise.all([fetchStatus(), fetchRSSItems()]);
+            } catch (error) {
+                console.error('Failed to refresh:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '刷新数据';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+
+            // 小于1分钟
+            if (diff < 60000) {
+                return '刚刚';
+            }
+
+            // 小于1小时
+            if (diff < 3600000) {
+                return Math.floor(diff / 60000) + '分钟前';
+            }
+
+            // 小于24小时
+            if (diff < 86400000) {
+                return Math.floor(diff / 3600000) + '小时前';
+            }
+
+            // 其他情况显示完整时间
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = '最后更新: ' + now.toLocaleString('zh-CN');
+        }
+
+        // 初始化
+        async function init() {
+            await Promise.all([fetchStatus(), fetchRSSItems()]);
+            updateLastUpdateTime();
+
+            // 每30秒自动刷新
+            refreshInterval = setInterval(async () => {
+                await Promise.all([fetchStatus(), fetchRSSItems()]);
+                updateLastUpdateTime();
+            }, 30000);
+        }
+
+        // 页面加载时初始化
+        init();
+
+        // 页面卸载时清理定时器
+        window.addEventListener('beforeunload', () => {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>
