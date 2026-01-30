@@ -1,0 +1,22 @@
+# CloudBase云托管部署配置文件
+# 注意: 在CloudBase上部署时，无法使用本地SQLite数据库
+# 建议改为使用CloudBase数据库或外部数据库
+
+# RSS订阅地址
+rss_url: "https://rss.m-team.io/your-rss-feed-url&dl=1"
+
+# RSS轮询间隔
+poll_interval: "5m"
+
+# .torrent文件保存路径（使用云存储）
+save_path: "/tmp/torrents"
+
+# 最大并发下载数
+max_concurrent: 2
+
+# SQLite数据库路径（临时文件，生产环境建议改用MySQL）
+db_path: "/tmp/downloads.db"
+
+# Web服务器配置（CloudBase云托管固定端口）
+web_port: 8080
+web_host: "0.0.0.0"
