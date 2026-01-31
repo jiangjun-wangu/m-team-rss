@@ -52,11 +52,19 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	// 加载HTML模板
-	router.LoadHTMLGlob("internal/web/templates/*")
+	// 加载HTML模板（支持Docker环境）
+	templatePath := "internal/web/templates/*"
+	if _, err := os.Stat("web/templates"); err == nil {
+		templatePath = "web/templates/*"
+	}
+	router.LoadHTMLGlob(templatePath)
 
-	// 静态文件
-	router.Static("/static", "internal/web/static")
+	// 静态文件（支持Docker环境）
+	staticPath := "internal/web/static"
+	if _, err := os.Stat("web/static"); err == nil {
+		staticPath = "web/static"
+	}
+	router.Static("/static", staticPath)
 
 	// 注册路由
 	handler.RegisterRoutes(router)

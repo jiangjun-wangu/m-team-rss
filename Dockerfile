@@ -31,11 +31,9 @@ ENV TZ=Asia/Shanghai
 
 WORKDIR /app
 
-# 从构建阶段复制可执行文件
+# 从构建阶段复制可执行文件和模板文件
 COPY --from=builder /app/mteam-downloader .
-
-# 复制模板文件
-COPY internal/web/templates ./web/templates
+COPY --from=builder /app/internal/web/templates ./web/templates
 
 # 创建必要的目录
 RUN mkdir -p /app/config /app/torrents /app/data
