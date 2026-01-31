@@ -1,13 +1,14 @@
+# 支持多架构构建
 FROM golang:1.25.6-alpine AS builder
 
 WORKDIR /app
 
 # 安装必要的构建工具
 RUN apk add --no-cache git gcc musl-dev
+
 # 设置 Go 模块代理和 CGO 编译器
 ENV GOPROXY=https://goproxy.cn,direct
-# 可选项：在严格网络环境下关闭校验
-# ENV GOSUMDB=off
+
 # 复制依赖文件
 COPY go.mod go.sum ./
 RUN go mod download
@@ -16,9 +17,10 @@ RUN go mod download
 COPY . .
 
 # 编译程序（启用CGO以支持SQLite）
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o mteam-downloader .
+# 使用 TARGETPLATFORM 自动适配目标架构
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=$(go env GOARCH) go build -ldflags="-w -s" -o mteam-downloader .
 
-# 最终镜像
+# 最终镜像 - 使用多架构基础镜像
 FROM alpine:latest
 
 # 安装运行时依赖
