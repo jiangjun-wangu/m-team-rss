@@ -2,6 +2,7 @@ package rss
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -50,11 +51,15 @@ func (c *Client) Fetch() ([]Item, error) {
 			PubDate: pubDate,
 		}
 
-		// 尝试从enclosure获取文件大小
-		if len(item.Enclosures) > 0 {
-			// Length是string类型，这里不做转换，Size默认为0
-			if rssItem.URL == "" {
-				rssItem.URL = item.Enclosures[0].URL
+		// 优先使用 enclosure URL（直接下载链接），而不是 link（详情页链接）
+		if len(item.Enclosures) > 0 && item.Enclosures[0].URL != "" {
+			rssItem.URL = item.Enclosures[0].URL
+		}
+
+		// 获取文件大小
+		if len(item.Enclosures) > 0 && item.Enclosures[0].Length != "" {
+			if size, err := parseSize(item.Enclosures[0].Length); err == nil {
+				rssItem.Size = size
 			}
 		}
 
@@ -67,4 +72,8 @@ func (c *Client) Fetch() ([]Item, error) {
 	}
 
 	return items, nil
+}
+
+func parseSize(sizeStr string) (int64, error) {
+	return strconv.ParseInt(sizeStr, 10, 64)
 }

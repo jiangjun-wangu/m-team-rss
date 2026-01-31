@@ -27,6 +27,17 @@ func New(savePath string, maxConcurrent int) *Downloader {
 		semaphore:     make(chan struct{}, maxConcurrent),
 		client: &http.Client{
 			Timeout: 60 * time.Second,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				// 允许最多10次重定向
+				if len(via) >= 10 {
+					return fmt.Errorf("stopped after 10 redirects")
+				}
+				// 复制原始请求的 User-Agent
+				if len(via) > 0 {
+					req.Header.Set("User-Agent", via[0].Header.Get("User-Agent"))
+				}
+				return nil
+			},
 		},
 	}
 }
@@ -68,7 +79,15 @@ func (d *Downloader) Download(task DownloadTask) (*DownloadResult, error) {
 	}
 
 	// 下载文件
-	resp, err := d.client.Get(task.URL)
+	req, err := http.NewRequest("GET", task.URL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// 添加 User-Agent
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+
+	resp, err := d.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download: %w", err)
 	}
