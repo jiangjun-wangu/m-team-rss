@@ -1,6 +1,6 @@
 services:
   mteam-downloader:
-    image: renjianhuashui/mteam-rss:arm64
+    image: renjianhuashui/mteam-rss:latest
     container_name: mteam-downloader
     restart: unless-stopped
     ports:
