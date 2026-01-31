@@ -1,6 +1,6 @@
 services:
   mteam-downloader:
-    image: renjianhuashui/mteam-rss:latest
+    image: renjianhuashui/mteam-rss:1.0.1
     container_name: mteam-downloader
     restart: unless-stopped
     ports:
@@ -11,4 +11,3 @@ services:
       - ./data:/app/data
     environment:
       - TZ=Asia/Shanghai
-    platform: linux/amd64  # 明确指定使用amd64架构
