@@ -16,6 +16,11 @@ func New(rssURL string) *Client {
 	return &Client{rssURL: rssURL}
 }
 
+func NewClient() *Client {
+	return &Client{rssURL: ""}
+}
+
+
 type Item struct {
 	GUID     string
 	Title    string
@@ -26,6 +31,10 @@ type Item struct {
 }
 
 func (c *Client) Fetch() ([]Item, error) {
+	return c.FetchWithLimit(0)
+}
+
+func (c *Client) FetchWithLimit(limit int) ([]Item, error) {
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseURL(c.rssURL)
 	if err != nil {
@@ -33,7 +42,14 @@ func (c *Client) Fetch() ([]Item, error) {
 	}
 
 	var items []Item
-	for _, item := range feed.Items {
+	maxItems := len(feed.Items)
+	if limit > 0 && limit < maxItems {
+		maxItems = limit
+	}
+
+	for i := 0; i < maxItems; i++ {
+		item := feed.Items[i]
+
 		guid := item.GUID
 		if guid == "" {
 			guid = item.Link

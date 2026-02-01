@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 20px; }
+        .nav {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        .nav a:hover { color: #1890ff; }
+        .nav a.active { color: #1890ff; }
+        .toolbar {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #333; font-weight: 500; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #1890ff;
+        }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-danger { background: #ff4d4f; color: #fff; }
+        .btn-danger:hover { background: #ff7875; }
+        .btn-small { padding: 4px 12px; font-size: 12px; }
+        .sources-list {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .source-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .source-item:last-child { border-bottom: none; }
+        .source-info {
+            flex: 1;
+            min-width: 0;
+            padding-right: 10px;
+        }
+        .source-info h3 {
+            color: #333;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .source-info p {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 3px;
+            word-break: break-all;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .source-info p.url {
+            max-width: 500px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .source-info .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .badge-enabled { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .badge-disabled { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+        .source-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+            min-width: 100px;
+        }
+        .badge-error { color: #ff4d4f; font-size: 12px; }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .source-item {
+                flex-direction: column;
+                padding: 15px;
+                gap: 10px;
+            }
+            .source-info {
+                padding-right: 0;
+                width: 100%;
+            }
+            .source-info p.url {
+                max-width: 100%;
+            }
+            .source-actions {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: 100%;
+                justify-content: flex-start;
+                min-width: auto;
+            }
+            .source-actions .btn {
+                flex: 1;
+                min-width: 80px;
+            }
+            .nav {
+                flex-wrap: wrap;
+            }
+            .nav a {
+                margin-right: 10px;
+                margin-bottom: 5px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .form-row .form-group {
+                flex: none;
+                width: 100%;
+            }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active { display: flex; justify-content: center; align-items: center; }
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 { margin: 0; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        .modal-close:hover { color: #333; }
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RSS源管理</h1>
+
+        <nav class="nav">
+            <a href="/">仪表盘</a>
+            <a href="/rss-sources" class="active">RSS源管理</a>
+            <a href="/tasks">任务列表</a>
+        </nav>
+
+        <div class="toolbar">
+            <h2>添加RSS源</h2>
+            <form id="add-source-form">
+                <div class="form-group">
+                    <label for="name">名称 *</label>
+                    <input type="text" id="name" name="name" required placeholder="例如: M-Team">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="site_type">站点类型 *</label>
+                        <select id="site_type" name="site_type" required>
+                            <option value="">请选择</option>
+                            <option value="mteam">M-Team</option>
+                            <option value="ptzone">PTZone</option>
+                            <option value="generic">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="rss_url">RSS地址 *</label>
+                        <input type="url" id="rss_url" name="rss_url" required placeholder="https://example.com/rss">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="poll_interval">轮询间隔(秒)</label>
+                        <input type="number" id="poll_interval" name="poll_interval" value="300" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="max_items">最大项目数</label>
+                        <input type="number" id="max_items" name="max_items" value="50" min="1">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">添加RSS源</button>
+            </form>
+        </div>
+
+        <div class="sources-list" id="sources-list"></div>
+
+        <!-- 编辑RSS源模态框 -->
+        <div class="modal" id="edit-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>编辑RSS源</h2>
+                    <button class="modal-close" onclick="closeEditModal()">&times;</button>
+                </div>
+                <form id="edit-source-form">
+                    <input type="hidden" id="edit-id" name="id">
+                    <div class="form-group">
+                        <label for="edit-name">名称 *</label>
+                        <input type="text" id="edit-name" name="name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-site_type">站点类型 *</label>
+                            <select id="edit-site_type" name="site_type" required>
+                                <option value="">请选择</option>
+                                <option value="mteam">M-Team</option>
+                                <option value="ptzone">PTZone</option>
+                                <option value="generic">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-rss_url">RSS地址 *</label>
+                            <input type="url" id="edit-rss_url" name="rss_url" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-poll_interval">轮询间隔(秒)</label>
+                            <input type="number" id="edit-poll_interval" name="poll_interval" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-max_items">最大项目数</label>
+                            <input type="number" id="edit-max_items" name="max_items" min="1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-enabled">状态</label>
+                        <select id="edit-enabled" name="enabled">
+                            <option value="true">启用</option>
+                            <option value="false">禁用</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" onclick="closeEditModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sources = [];
+
+        async function loadSources() {
+            try {
+                const res = await fetch('/api/rss-sources');
+                const data = await res.json();
+                if (data.code === 0) {
+                    sources = data.data.sources;
+                    renderSources();
+                }
+            } catch (error) {
+                console.error('Failed to load sources:', error);
+                alert('加载RSS源失败');
+            }
+        }
+
+        function renderSources() {
+            const list = document.getElementById('sources-list');
+            if (sources.length === 0) {
+                list.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">暂无RSS源,请添加</div>';
+                return;
+            }
+
+            list.innerHTML = sources.map(source => {
+                const badgeClass = source.enabled ? 'badge-enabled' : 'badge-disabled';
+                const statusText = source.enabled ? '已启用' : '已禁用';
+
+                return `
+                    <div class="source-item">
+                        <div class="source-info">
+                            <h3>
+                                ${source.name}
+                                <span class="badge ${badgeClass}">${statusText}</span>
+                            </h3>
+                            <p><strong>类型:</strong> ${source.site_type} | <strong>间隔:</strong> ${source.poll_interval}s | <strong>最大:</strong> ${source.max_items}</p>
+                            <p class="url"><strong>地址:</strong> <span title="${source.rss_url}">${source.rss_url}</span></p>
+                            <p><strong>上次抓取:</strong> ${source.last_fetch ? new Date(source.last_fetch).toLocaleString('zh-CN') : '从未'}</p>
+                            ${source.last_error ? `<p class="badge-error">错误 (${source.error_count}): ${source.last_error}</p>` : ''}
+                        </div>
+                        <div class="source-actions">
+                            <button class="btn btn-primary btn-small" onclick="editSource(${source.id})">编辑</button>
+                            ${source.enabled ?
+                                `<button class="btn btn-danger btn-small" onclick="toggleSource(${source.id})">禁用</button>` :
+                                `<button class="btn btn-primary btn-small" onclick="toggleSource(${source.id})">启用</button>`
+                            }
+                            <button class="btn btn-primary btn-small" onclick="fetchSource(${source.id})">抓取</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteSource(${source.id})">删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function addSource(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const pollInterval = parseInt(form.poll_interval.value);
+
+            // 验证轮询间隔
+            if (pollInterval < 1) {
+                alert('轮询间隔必须大于或等于1秒');
+                return;
+            }
+
+            const data = {
+                name: form.name.value,
+                site_type: form.site_type.value,
+                rss_url: form.rss_url.value,
+                poll_interval: pollInterval,
+                max_items: parseInt(form.max_items.value),
+                enabled: true
+            };
+
+            try {
+                const res = await fetch('/api/rss-sources', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+
+                if (result.code === 0) {
+                    alert('添加成功');
+                    form.reset();
+                    loadSources();
+                } else {
+                    alert('添加失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Failed to add source:', error);
+                alert('添加失败');
+            }
+        }
+
+        async function toggleSource(id) {
+            try {
+                const res = await fetch(`/api/rss-sources/${id}/toggle`, { method: 'PATCH' });
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    loadSources();
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Failed to toggle source:', error);
+                alert('操作失败');
+            }
+        }
+
+        async function fetchSource(id) {
+            try {
+                const res = await fetch(`/api/rss-sources/${id}/fetch`, { method: 'POST' });
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    alert('抓取任务已启动');
+                } else {
+                    alert('启动失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Failed to fetch source:', error);
+                alert('启动失败');
+            }
+        }
+
+        async function deleteSource(id) {
+            if (!confirm('确定要删除此RSS源吗?')) return;
+
+            try {
+                const res = await fetch(`/api/rss-sources/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    alert('删除成功');
+                    loadSources();
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Failed to delete source:', error);
+                alert('删除失败');
+            }
+        }
+
+        async function editSource(id) {
+            try {
+                const source = sources.find(s => s.id === id);
+                if (!source) {
+                    alert('未找到RSS源');
+                    return;
+                }
+
+                document.getElementById('edit-id').value = source.id;
+                document.getElementById('edit-name').value = source.name;
+                document.getElementById('edit-site_type').value = source.site_type;
+                document.getElementById('edit-rss_url').value = source.rss_url;
+                document.getElementById('edit-poll_interval').value = source.poll_interval;
+                document.getElementById('edit-max_items').value = source.max_items;
+                document.getElementById('edit-enabled').value = source.enabled.toString();
+
+                document.getElementById('edit-modal').classList.add('active');
+            } catch (error) {
+                console.error('Failed to edit source:', error);
+                alert('编辑失败');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        async function updateSource(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const id = parseInt(form.id.value);
+            const pollInterval = parseInt(form.poll_interval.value);
+
+            // 验证轮询间隔
+            if (pollInterval < 1) {
+                alert('轮询间隔必须大于或等于1秒');
+                return;
+            }
+
+            const data = {
+                name: form.name.value,
+                site_type: form.site_type.value,
+                rss_url: form.rss_url.value,
+                poll_interval: pollInterval,
+                max_items: parseInt(form.max_items.value),
+                enabled: form.enabled.value === 'true'
+            };
+
+            try {
+                const res = await fetch(`/api/rss-sources/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+
+                if (result.code === 0) {
+                    alert('更新成功');
+                    closeEditModal();
+                    loadSources();
+                } else {
+                    alert('更新失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Failed to update source:', error);
+                alert('更新失败');
+            }
+        }
+
+        document.getElementById('add-source-form').addEventListener('submit', addSource);
+        document.getElementById('edit-source-form').addEventListener('submit', updateSource);
+        loadSources();
+    </script>
+</body>
+</html>

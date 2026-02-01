@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 20px; }
+        .nav {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        .nav a:hover { color: #1890ff; }
+        .nav a.active { color: #1890ff; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 { color: #666; font-size: 14px; margin-bottom: 10px; }
+        .stat-card .value { color: #333; font-size: 32px; font-weight: bold; }
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card h2 { margin-bottom: 15px; color: #333; }
+        .logs {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .log-item.error { color: #ff4d4f; }
+        .log-item.warning { color: #faad14; }
+        .log-item.info { color: #52c41a; }
+        .log-time { color: #999; margin-right: 10px; }
+        .status-running { color: #52c41a; }
+        .status-stopped { color: #ff4d4f; }
+        .source-list { list-style: none; }
+        .source-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .source-info h4 { color: #333; margin-bottom: 5px; }
+        .source-info p { color: #666; font-size: 13px; }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-running { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .badge-idle { background: #fff7e6; color: #faad14; border: 1px solid #ffd591; }
+        .badge-error { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+        .refresh-btn {
+            background: #1890ff;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .refresh-btn:hover { background: #40a9ff; }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .stat-card {
+                padding: 15px;
+            }
+            .stat-card .value {
+                font-size: 24px;
+            }
+            .nav {
+                flex-wrap: wrap;
+            }
+            .nav a {
+                margin-right: 10px;
+                margin-bottom: 5px;
+            }
+            .source-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .logs {
+                max-height: 300px;
+            }
+            .log-item {
+                font-size: 12px;
+                padding: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PT种子下载器 - 仪表盘</h1>
+
+        <nav class="nav">
+            <a href="/" class="active">仪表盘</a>
+            <a href="/rss-sources">RSS源管理</a>
+            <a href="/tasks">任务列表</a>
+        </nav>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>RSS源总数</h3>
+                <div class="value" id="total-sources">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>启用RSS源</h3>
+                <div class="value" id="enabled-sources">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>总任务数</h3>
+                <div class="value" id="total-tasks">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>待下载</h3>
+                <div class="value" id="pending-tasks">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>下载中</h3>
+                <div class="value" id="downloading-tasks">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>已完成</h3>
+                <div class="value" id="completed-tasks">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>失败</h3>
+                <div class="value" id="failed-tasks">-</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>
+                RSS源状态
+                <button class="refresh-btn" onclick="loadData()">刷新</button>
+            </h2>
+            <ul class="source-list" id="sources-list"></ul>
+        </div>
+
+        <div class="card">
+            <h2>系统日志</h2>
+            <div class="logs" id="logs-list"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadData() {
+            try {
+                const [statsRes, logsRes] = await Promise.all([
+                    fetch('/api/dashboard/stats'),
+                    fetch('/api/dashboard/logs?limit=50')
+                ]);
+
+                const statsData = await statsRes.json();
+                const logsData = await logsRes.json();
+
+                if (statsData.code === 0) {
+                    updateStats(statsData.data.stats);
+                    updateSourcesStatus(statsData.data.sources_status);
+                }
+
+                if (logsData.code === 0) {
+                    updateLogs(logsData.data.logs);
+                }
+            } catch (error) {
+                console.error('Failed to load data:', error);
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('total-sources').textContent = stats.total_sources;
+            document.getElementById('enabled-sources').textContent = stats.enabled_sources;
+            document.getElementById('total-tasks').textContent = stats.total_tasks;
+            document.getElementById('pending-tasks').textContent = stats.pending_tasks;
+            document.getElementById('downloading-tasks').textContent = stats.downloading_tasks;
+            document.getElementById('completed-tasks').textContent = stats.completed_tasks;
+            document.getElementById('failed-tasks').textContent = stats.failed_tasks;
+        }
+
+        function updateSourcesStatus(sources) {
+            const list = document.getElementById('sources-list');
+            if (sources.length === 0) {
+                list.innerHTML = '<li class="source-item">暂无RSS源</li>';
+                return;
+            }
+
+            list.innerHTML = sources.map(source => {
+                let badgeClass = 'badge-idle';
+                let statusText = '空闲';
+                if (source.is_running) {
+                    badgeClass = 'badge-running';
+                    statusText = '运行中';
+                } else if (source.error_count >= 3) {
+                    badgeClass = 'badge-error';
+                    statusText = '错误';
+                }
+
+                const lastFetch = source.last_fetch ? new Date(source.last_fetch).toLocaleString('zh-CN') : '从未';
+                const nextFetch = source.next_fetch ? new Date(source.next_fetch).toLocaleString('zh-CN') : '-';
+
+                return `
+                    <li class="source-item">
+                        <div class="source-info">
+                            <h4>${source.source_name}</h4>
+                            <p>上次抓取: ${lastFetch} | 下次抓取: ${nextFetch}</p>
+                            ${source.last_error ? `<p style="color: #ff4d4f;">错误: ${source.last_error}</p>` : ''}
+                        </div>
+                        <span class="badge ${badgeClass}">${statusText}</span>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        function updateLogs(logs) {
+            const list = document.getElementById('logs-list');
+            if (logs.length === 0) {
+                list.innerHTML = '<div class="log-item">暂无日志</div>';
+                return;
+            }
+
+            list.innerHTML = logs.map(log => {
+                const time = new Date(log.created_at).toLocaleString('zh-CN');
+                return `
+                    <div class="log-item ${log.level}">
+                        <span class="log-time">${time}</span>
+                        <strong>[${log.level.toUpperCase()}]</strong>
+                        ${log.message}
+                        ${log.context ? `<br><small style="color: #999;">${log.context}</small>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 初始加载数据
+        loadData();
+
+        // 定时刷新(每30秒)
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>

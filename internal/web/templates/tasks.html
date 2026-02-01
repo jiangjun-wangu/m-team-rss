@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 20px; }
+        .nav {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        .nav a:hover { color: #1890ff; }
+        .nav a.active { color: #1890ff; }
+        .toolbar {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .toolbar select, .toolbar input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-danger { background: #ff4d4f; color: #fff; }
+        .btn-danger:hover { background: #ff7875; }
+        .btn-success { background: #52c41a; color: #fff; }
+        .btn-success:hover { background: #73d13d; }
+        .btn-small { padding: 4px 12px; font-size: 12px; }
+        .tasks-list {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .task-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-info {
+            flex: 1;
+            min-width: 0;
+            padding-right: 10px;
+        }
+        .task-info h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        .task-info p { color: #666; font-size: 13px; margin-bottom: 4px; }
+        .task-info .task-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+        .task-meta span { color: #999; font-size: 12px; }
+        .task-actions { display: flex; gap: 8px; flex-direction: column; flex-shrink: 0; }
+        .task-actions .action-group { display: flex; gap: 8px; }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .badge-pending { background: #fff7e6; color: #faad14; border: 1px solid #ffd591; }
+        .badge-downloading { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+        .badge-completed { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .badge-failed { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+        .badge-paused { background: #f5f5f5; color: #999; border: 1px solid #d9d9d9; }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .task-item {
+                flex-direction: column;
+                padding: 12px;
+                gap: 10px;
+            }
+            .task-info {
+                padding-right: 0;
+                width: 100%;
+            }
+            .task-info h3 {
+                font-size: 14px;
+            }
+            .task-actions {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: 100%;
+                min-width: auto;
+            }
+            .task-actions .btn {
+                flex: 1;
+                min-width: 80px;
+                font-size: 12px;
+            }
+            .nav {
+                flex-wrap: wrap;
+            }
+            .nav a {
+                margin-right: 10px;
+                margin-bottom: 5px;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .toolbar .checkbox-wrapper {
+                justify-content: flex-start;
+            }
+            .toolbar select, .toolbar input {
+                width: 100%;
+            }
+            .pagination {
+                flex-wrap: wrap;
+            }
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .pagination button {
+            padding: 6px 16px;
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pagination button:hover:not(:disabled) { background: #f5f5f5; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination span { color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>任务列表</h1>
+
+        <nav class="nav">
+            <a href="/">仪表盘</a>
+            <a href="/rss-sources">RSS源管理</a>
+            <a href="/tasks" class="active">任务列表</a>
+        </nav>
+
+        <div class="toolbar">
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+                <label for="select-all">全选</label>
+            </div>
+            <select id="status-filter" onchange="loadTasks()">
+                <option value="">全部状态</option>
+                <option value="pending">待下载</option>
+                <option value="downloading">下载中</option>
+                <option value="completed">已完成</option>
+                <option value="failed">失败</option>
+            </select>
+            <button class="btn btn-primary btn-small" onclick="batchRetry()">重试选中</button>
+            <button class="btn btn-danger btn-small" onclick="batchDelete()">删除选中</button>
+            <button class="btn btn-success btn-small" onclick="cleanupTasks()">清理已完成</button>
+            <span id="selected-count" style="margin-left: auto; color: #999;">已选: 0</span>
+        </div>
+
+        <div class="tasks-list" id="tasks-list"></div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let pageSize = 20;
+        let totalPages = 1;
+        let selectedTasks = new Set();
+
+        async function loadTasks() {
+            const status = document.getElementById('status-filter').value;
+            const url = `/api/tasks?page=${currentPage}&page_size=${pageSize}`;
+            const params = status ? `${url}&status=${status}` : url;
+
+            try {
+                const res = await fetch(params);
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    renderTasks(data.data.tasks);
+                    updatePagination(data.data.pagination);
+                }
+            } catch (error) {
+                console.error('Failed to load tasks:', error);
+            }
+        }
+
+        function renderTasks(tasks) {
+            const list = document.getElementById('tasks-list');
+            if (tasks.length === 0) {
+                list.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">暂无任务</div>';
+                return;
+            }
+
+            list.innerHTML = tasks.map(task => {
+                const size = task.size ? (task.size / 1024 / 1024).toFixed(2) + ' MB' : '-';
+                const created = new Date(task.created_at).toLocaleString('zh-CN');
+                const isSelected = selectedTasks.has(task.id);
+
+                return `
+                    <div class="task-item">
+                        <div class="task-info">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleTask(${task.id})">
+                                <h3>${task.title}</h3>
+                                <span class="badge badge-${task.status}">${getStatusLabel(task.status)}</span>
+                            </div>
+                            <p><strong>大小:</strong> ${size} | <strong>分类:</strong> ${task.category || '-'}</p>
+                            <div class="task-meta">
+                                <span>创建时间: ${created}</span>
+                                <span>重试: ${task.retry_count}次</span>
+                            </div>
+                            ${task.error_message ? `<p style="color: #ff4d4f; margin-top: 4px;">错误: ${task.error_message}</p>` : ''}
+                        </div>
+                        <div class="task-actions">
+                            <div class="action-group">
+                                ${task.status === 'failed' || task.status === 'paused' ?
+                                    `<button class="btn btn-primary btn-small" onclick="retryTask(${task.id})">重试</button>` : ''
+                                }
+                                ${task.status === 'downloading' || task.status === 'pending' ?
+                                    `<button class="btn btn-danger btn-small" onclick="pauseTask(${task.id})">暂停</button>` : ''
+                                }
+                                <button class="btn btn-danger btn-small" onclick="deleteTask(${task.id})">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': '待下载',
+                'downloading': '下载中',
+                'completed': '已完成',
+                'failed': '失败',
+                'paused': '已暂停'
+            };
+            return labels[status] || status;
+        }
+
+        function updatePagination(pagination) {
+            totalPages = pagination.total_pages;
+            const pag = document.getElementById('pagination');
+
+            pag.innerHTML = `
+                <button ${currentPage <= 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">上一页</button>
+                <span>第 ${currentPage} / ${totalPages} 页 (共 ${pagination.total} 条)</span>
+                <button ${currentPage >= totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">下一页</button>
+            `;
+        }
+
+        function changePage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            loadTasks();
+        }
+
+        function toggleTask(id) {
+            if (selectedTasks.has(id)) {
+                selectedTasks.delete(id);
+            } else {
+                selectedTasks.add(id);
+            }
+            updateSelectedCount();
+        }
+
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.task-item input[type="checkbox"]');
+            const selectAll = document.getElementById('select-all').checked;
+
+            if (selectAll) {
+                checkboxes.forEach(cb => {
+                    const taskId = parseInt(cb.onchange.toString().match(/\d+/)?.[0] || 0);
+                    selectedTasks.add(taskId);
+                });
+            } else {
+                selectedTasks.clear();
+            }
+            updateSelectedCount();
+            loadTasks();
+        }
+
+        function updateSelectedCount() {
+            document.getElementById('selected-count').textContent = `已选: ${selectedTasks.size}`;
+        }
+
+        async function batchRetry() {
+            if (selectedTasks.size === 0) {
+                alert('请先选择任务');
+                return;
+            }
+            await batchAction('retry');
+        }
+
+        async function batchDelete() {
+            if (selectedTasks.size === 0) {
+                alert('请先选择任务');
+                return;
+            }
+            if (!confirm(`确定要删除选中的 ${selectedTasks.size} 个任务吗?`)) return;
+            await batchAction('delete');
+        }
+
+        async function batchAction(action) {
+            try {
+                const res = await fetch('/api/tasks/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: action,
+                        task_ids: Array.from(selectedTasks)
+                    })
+                });
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    alert(`操作成功: ${data.data.success_count} 个`);
+                    selectedTasks.clear();
+                    updateSelectedCount();
+                    loadTasks();
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Batch action failed:', error);
+                alert('操作失败');
+            }
+        }
+
+        async function retryTask(id) {
+            try {
+                const res = await fetch(`/api/tasks/${id}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'pending' })
+                });
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    loadTasks();
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Failed to retry task:', error);
+                alert('操作失败');
+            }
+        }
+
+        async function pauseTask(id) {
+            try {
+                const res = await fetch(`/api/tasks/${id}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'paused' })
+                });
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    loadTasks();
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Failed to pause task:', error);
+                alert('操作失败');
+            }
+        }
+
+        async function deleteTask(id) {
+            if (!confirm('确定要删除此任务吗?')) return;
+
+            try {
+                await batchAction('delete');
+            } catch (error) {
+                console.error('Failed to delete task:', error);
+                alert('删除失败');
+            }
+        }
+
+        async function cleanupTasks() {
+            if (!confirm('确定要清理7天前的已完成任务吗?')) return;
+
+            try {
+                const res = await fetch('/api/tasks/cleanup?older_than=168h', { method: 'DELETE' });
+                const data = await res.json();
+
+                if (data.code === 0) {
+                    alert('清理成功');
+                    loadTasks();
+                } else {
+                    alert('清理失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Failed to cleanup tasks:', error);
+                alert('清理失败');
+            }
+        }
+
+        loadTasks();
+    </script>
+</body>
+</html>

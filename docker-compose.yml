@@ -1,13 +1,36 @@
 services:
-  mteam-downloader:
+  mteam-rss:
     image: renjianhuashui/mteam-rss:latest
-    container_name: mteam-downloader
+    container_name: mteam-rss
     restart: unless-stopped
     ports:
       - "8080:8080"  # Web界面端口
     volumes:
-      - ./config:/app/config
-      - ./torrents:/app/torrents
-      - ./data:/app/data
+      - ./config:/app/config    # 配置文件目录（可选，用于config.yaml）
+      - ./torrents:/app/torrents  # 下载的种子文件
+      - ./data:/app/data        # 数据库文件
     environment:
       - TZ=Asia/Shanghai
+      # 可选：通过环境变量覆盖配置文件设置
+      # - CONFIG_PATH=/app/config/config.yaml  # 配置文件路径（默认）
+      # - DB_PATH=/app/data/downloads.db      # 数据库路径（默认）
+      # - SAVE_PATH=/app/torrents            # 下载保存路径（默认）
+      # - HOST=0.0.0.0                       # Web监听地址（默认）
+      # - PORT=8080                          # Web端口（默认）
+      # - GIN_MODE=release                   # 运行模式（默认）
+
+  # 自定义构建示例（使用本地代码）
+  # mteam-rss-local:
+  #   build: .
+  #   container_name: mteam-rss-local
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8081:8080"
+  #   volumes:
+  #     - ./config:/app/config
+  #     - ./torrents:/app/torrents
+  #     - ./data:/app/data
+  #   environment:
+  #     - TZ=Asia/Shanghai
+  #     - PORT=8080
+
